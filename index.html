@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="stylesheet" href="Calculator.css">
+<title> (percobaan joss )</title>
+<style>
+  :root{ --bg1: linear-gradient(135deg,#667eea,#764ba2); --glass: rgba(255,255,255,0.10); --accent1: #00c6ff; --accent2: #0072ff; --text: #f5f7fb; --muted: rgba(245,247,251,0.82); }
+  [data-theme="dark"]{ --glass: rgba(0,0,0,0.35); --bg1: linear-gradient(135deg,#071027,#0b1220); --text:#e6eef8; --muted: rgba(230,238,248,0.85); }
+  *{box-sizing:border-box;font-family:Inter,'Poppins',system-ui,-apple-system,sans-serif}
+  html,body{height:100%;margin:0}
+  body{min-height:100vh;display:flex;flex-direction:column;align-items:center;gap:18px;padding:22px;background:var(--bg1);color:var(--text);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+  /* header (TIDAK DIUBAH) */
+  .site-header{width:100%;max-width:1180px;display:flex;align-items:center;gap:12px;padding:12px 18px;border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow:0 8px 24px rgba(2,6,23,0.18);border:1px solid rgba(255,255,255,0.03);backdrop-filter: blur(6px)}
+  .brand .title{font-weight:800}
+  .brand .sub{font-size:.78rem;color:var(--muted)}
+  .header-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+
+  /* ===== menu / hamburger (replacements) ===== */
+  .menu-btn{
+    background:transparent;
+    border:none;
+    padding:8px;
+    border-radius:10px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    z-index:1300;
+  }
+  .hamburger{ width:28px; height:20px; position:relative; display:inline-block; -webkit-tap-highlight-color: transparent; }
+  .hamburger span{ position:absolute; left:0; right:0; height:2.5px; background:linear-gradient(90deg,var(--accent1),var(--accent2)); border-radius:3px; transition:transform .28s cubic-bezier(.2,.9,.3,1), opacity .18s, top .18s; will-change:transform, opacity, top; }
+  .hamburger span:nth-child(1){ top:0; }
+  .hamburger span:nth-child(2){ top:9px; }
+  .hamburger span:nth-child(3){ top:18px; }
+  .menu-btn.open .hamburger span:nth-child(1){ transform: translateY(9px) rotate(45deg); top:9px; }
+  .menu-btn.open .hamburger span:nth-child(2){ opacity:0; transform: scaleX(0.2); top:9px; }
+  .menu-btn.open .hamburger span:nth-child(3){ transform: translateY(-9px) rotate(-45deg); top:9px; }
+
+  .side-menu{ position:fixed; top:0; left:0; height:100vh; width:360px; max-width:85vw; background:var(--glass); backdrop-filter:blur(12px); box-shadow:0 30px 60px rgba(2,6,23,0.45); transform:translateX(-110%); transition:transform .28s cubic-bezier(.2,.9,.3,1); z-index:1200; padding:22px; overflow:auto; -webkit-overflow-scrolling:touch; }
+  .side-menu.open{ transform:translateX(0); }
+
+  .menu-overlay{ position:fixed; inset:0; background: rgba(0,0,0,0.35); z-index:1100; opacity:0; pointer-events:none; transition:opacity .22s ease; }
+  .menu-overlay.show{ opacity:1; pointer-events:auto; }
+
+  .menu-list a, .collapsible { display:flex; align-items:center; gap:10px; padding:10px; border-radius:10px; text-decoration:none; color:var(--text); font-weight:700; transition:transform .12s ease, background .12s ease, box-shadow .12s ease; position:relative; overflow:visible; }
+  .menu-list a:focus, .collapsible:focus { outline:2px solid rgba(0,198,255,0.14); outline-offset:3px; }
+  .menu-list a::after, .collapsible::after{ content:''; position:absolute; left:10px; right:10px; height:4px; border-radius:6px; background:linear-gradient(90deg,var(--accent1),var(--accent2)); transform:scaleX(0); transform-origin:left; transition:transform .28s cubic-bezier(.2,.9,.3,1),opacity .18s; opacity:0 }
+  .menu-list a:hover, .collapsible:hover{ transform:translateX(6px); box-shadow:0 8px 20px rgba(0,0,0,0.10) }
+  .menu-list a:hover::after, .collapsible:hover::after{ transform:scaleX(1); opacity:1 }
+  .close-menu { color:var(--text); background:transparent; border:none; font-size:26px; cursor:pointer; }
+  @media (max-width:420px){ .side-menu{ width:85vw; } .hamburger{ width:24px; height:18px; } }
+
+  /* card: two-column top + full-width bottom (tip) */
+  .card{width:100%;max-width:1180px;border-radius:18px;padding:18px;background:var(--glass);backdrop-filter: blur(10px);box-shadow:0 18px 40px rgba(2,6,23,0.35);display:grid;grid-template-columns:460px 1fr;grid-template-rows:auto auto;gap:18px;position:relative;overflow:visible}
+  @media (max-width:980px){ .card{grid-template-columns:1fr;grid-template-rows:auto auto;padding:14px} }
+  .card::before{ content:'';position:absolute;left:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle at 20% 20%, rgba(0,198,255,0.12), transparent 30%);pointer-events:none;mix-blend-mode:screen;filter:blur(18px);opacity:.9}
+
+  /* left: inputs */
+  .controls{grid-column:1 / 2; grid-row:1 / 2}
+  .controls label{display:block;font-size:0.86rem;color:var(--muted);margin-top:12px}
+  .input, .input-read{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--text);font-size:1rem;outline:none;transition:box-shadow .18s, transform .12s}
+  .input:focus, .input-read:focus{box-shadow:0 8px 26px rgba(2,6,23,0.22);transform:translateY(-2px)}
+  .small{display:flex;gap:8px;margin-top:8px;align-items:center}
+  .preview{font-size:.86rem;color:var(--muted);min-height:20px}
+
+  /* right: chart */
+  .panel{grid-column:2 / 3;grid-row:1 / 2;padding-left:8px;border-left:1px solid rgba(255,255,255,0.06)}
+  @media (max-width:880px){ .panel{border-left:none;padding-left:0} }
+  .result{margin-bottom:12px;padding:12px;border-radius:12px;background:linear-gradient(180deg, rgba(0,0,0,0.10), rgba(0,0,0,0.06));backdrop-filter: blur(2px)}
+  .result .row{display:flex;justify-content:space-between;gap:8px}
+  .big{font-size:1.25rem;font-weight:800;letter-spacing:.4px}
+  .sub{font-size:0.9rem;color:var(--muted)}
+  canvas#chart{width:100%;height:320px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));display:block}
+
+  /* tip area INSIDE card, spans full width below the two columns */
+  .card-tip{grid-column:1 / -1; grid-row:2 / 3; margin-top:6px; padding:12px 18px; border-radius:12px; background:transparent; border-top:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; align-items:center; gap:8px;}
+  .card-tip .tip-title{font-size:1.14rem;font-weight:700}
+  .card-tip p{margin:0;margin-top:4px;color:var(--muted);font-size:1rem;max-width:920px;text-align:center}
+
+  /* learning panel (separate) */
+  .learning{width:100%;max-width:1180px;border-radius:14px;padding:20px;background:var(--glass);border:1px solid rgba(255,255,255,0.04);box-shadow:0 14px 34px rgba(2,6,23,0.12);margin-top:20px}
+  .learning h2{margin:0 0 10px;font-size:1.12rem}
+  .learning .content{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:980px){ .learning .content{grid-template-columns:1fr} }
+  .lesson-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:10px;font-size:1.02rem}
+
+  /* buttons / misc */
+  .btn{margin-top:14px;padding:10px 12px;border-radius:12px;border:none;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#fff;font-weight:700;cursor:pointer;width:100%;box-shadow:0 10px 30px rgba(7,130,255,0.12);position:relative;overflow:hidden}
+  .btn.secondary{margin-top:8px;background:transparent;border:1px solid rgba(255,255,255,0.06);box-shadow:none;color:var(--text)}
+
+  /* --- Force toggles to appear inline (horizontal) --- */
+  .toggles{
+    display: flex;
+    gap: 14px;               /* jarak antar toggle */
+    align-items: center;     /* vertikal rata tengah */
+    margin-top: 12px;        /* beri jarak atas seperti sebelumnya */
+    flex-wrap: wrap;         /* wrap bila layar sempit */
+  }
+
+  /* pastikan label di dalam .toggles tidak punya margin top yang memaksa baris baru */
+  .toggles > label{ margin-top: 0; }
+
+  /* kecil: di layar sangat sempit biar tetap rapi (opsional tapi aman) */
+  @media (max-width: 420px){
+    .toggles{ gap:10px; justify-content:flex-start; }
+    .toggles > label{ font-size:0.95rem; }
+  }
+
+  .muted{color:var(--muted);font-size:.86rem}
+  .tooltip{position:absolute;pointer-events:none;background:rgba(0,0,0,0.8);color:#fff;padding:8px 10px;border-radius:6px;font-size:0.86rem;transform:translate(-50%,-120%);white-space:nowrap}
+  .confetti-canvas{position:fixed;left:0;top:0;pointer-events:none;z-index:2000}
+</style>
+</head>
+<body data-theme="light">
+
+<header class="site-header" role="banner" aria-label="Compounding Calc header">
+  <button id="menuBtn" class="menu-btn" aria-label="Buka menu" aria-controls="sideMenu" aria-expanded="false">
+    <span class="hamburger" aria-hidden="true"><span></span><span></span><span></span></span>
+  </button>
+  <div class="brand" style="margin-left:6px">
+    <div class="title" style="font-size:1.05rem">Compounding Calculator</div>
+    <div class="sub">A calculator that can use for counting a money</div>
+  </div>
+  <div class="header-actions" role="toolbar" aria-label="Aksi header">
+    <label for="themeToggle" style="font-size:.78rem;color:var(--muted)">Mode</label>
+    <select id="themeToggle" class="input-read" aria-label="Toggle tema" style="width:120px">
+      <option value="light">Ringan</option><option value="dark">Gelap</option>
+    </select>
+  </div>
+</header>
+
+<nav id="sideMenu" class="side-menu" aria-hidden="true">
+  <button id="closeMenu" class="close-menu" aria-label="Tutup menu" style="position:absolute;right:12px;top:8px;background:transparent;border:none;font-size:26px;color:var(--text)">×</button>
+  <ul class="menu-list" role="menu" aria-label="Menu">
+    <li role="none"><a href="Calculator.html" id="navCalculator" data-nav="calculator" role="menuitem" tabindex="0">Calculator</a></li>
+    <li role="none">
+      <button class="collapsible" aria-expanded="false" style="background:transparent;border:none;padding:0">Pembelajaran</button>
+      <ul class="sublist" aria-label="Kumpulan video YouTube" role="menu">
+        <li><a href="Bunga2.html" class="video-link muted" role="menuitem" tabindex="-1"> Materi compounding</a></li>
+        <li><a href="video.html" class="video-link muted" role="menuitem" tabindex="-1">Pembelajaran Youtube</a></li>
+      </ul>
+    </li>
+    <li role="none"><a href="About.html" id="navAbout">Tentang & Bantuan</a></li>
+  </ul>
+</nav>
+<div id="menuOverlay" class="menu-overlay" hidden></div>
+
+<main class="card" role="main" aria-label="Kalkulator Investasi">
+
+  <!-- left: inputs (kalkulator) -->
+  <section class="controls" aria-label="Form kontrol">
+    <form id="calcForm" onsubmit="return false;" aria-label="Form kalkulator investasi" novalidate>
+      <label for="principal">Modal Awal (Rp) — <small class="muted">jangan ketik '.' atau ','</small></label>
+      <input inputmode="numeric" pattern="[0-9]*" id="principal" class="input" placeholder="contoh: 1000000" maxlength="15"/>
+      <div class="small"><div class="preview" id="previewPrincipal">—</div></div>
+
+      <label for="rateRange">Suku Bunga (% per tahun)</label>
+      <input type="range" id="rateRange" min="0" max="100" step="0.01" value="5" style="width:100%"/>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+        <input id="rateRead" class="input-read" readonly style="width:140px"/>
+        <div class="preview" id="previewRate" style="flex:1">—</div>
+      </div>
+
+      <label for="years">Jangka Waktu (tahun)</label>
+      <input inputmode="numeric" pattern="[0-9]*" id="years" class="input" placeholder="contoh: 10" maxlength="4"/>
+      <div class="small"><div class="preview" id="previewYears">—</div></div>
+
+      <label for="contribution">Setoran Rutin per Tahun (opsional)</label>
+      <input inputmode="numeric" pattern="[0-9]*" id="contribution" class="input" placeholder="contoh: 100000" maxlength="12"/>
+      <div class="small"><div class="preview" id="previewContribution">—</div></div>
+
+      <label for="freq">Frekuensi Periode</label>
+      <select id="freq" class="input-read" aria-label="Frekuensi kompaun" style="width:100%">
+        <option value="1">Tahunan (1x/tahun)</option>
+        <option value="2">Semi-Tahunan (2x/tahun)</option>
+        <option value="4">Triwulan (4x/tahun)</option>
+        <option value="12" selected>Bulanan (12x/tahun)</option>
+        <option value="365">Harian (365x/tahun)</option>
+      </select>
+
+      <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+        <label style="display:flex;align-items:center;gap:6px"><input type="radio" name="timing" value="end" checked/> Setoran di akhir periode</label>
+        <label style="display:flex;align-items:center;gap:6px"><input type="radio" name="timing" value="start"/> Setoran di awal periode</label>
+      </div>
+
+      <div class="presets">
+        <select id="presetSelect" class="input-read" aria-label="Pilih preset" style="flex:1">
+          <option value="">Pilih preset simulasi...</option>
+          <option value="conservative">Conservative (2% / 10y)</option>
+          <option value="balanced">Balanced (6% / 20y)</option>
+          <option value="aggressive">Aggressive (10% / 20y)</option>
+        </select>
+        <button id="applyPreset" class="btn secondary" type="button" style="width:160px">Terapkan</button>
+      </div>
+
+      <div class="toggles" role="group" aria-label="Opsi tambahan">
+        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="soundToggle"/> Suara klik</label>
+        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="animateToggle" checked/> Animasi grafik</label>
+        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="tiltToggle" checked/> Card Tilt</label>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <button id="calculateBtn" class="btn" type="button">Hitung & Tampilkan</button>
+        <button id="exportBtn" class="btn secondary" type="button">Simpan Grafik (PNG)</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <button id="exportCsvBtn" class="btn secondary" type="button">Export CSV</button>
+        <button id="shareBtn" class="btn secondary" type="button">Bagikan (Link)</button>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+        <input id="saveName" class="input-read" placeholder="Nama skenario (opsional)" aria-label="Nama skenario"/>
+        <button id="saveScenario" class="btn secondary" type="button" style="width:140px">Simpan</button>
+      </div>
+
+      <div class="saved-list" id="savedList" aria-live="polite"></div>
+    </form>
+  </section>
+
+  <!-- right: chart / results -->
+  <aside class="panel" aria-live="polite">
+    <div class="result" id="summaryBox" aria-label="Ringkasan hasil">
+      <div class="row">
+        <div>
+          <div class="sub">Total Akhir</div>
+          <div id="totalText" class="big" data-value="0">—</div>
+          <div id="totalWords" class="sub">—</div>
+        </div>
+        <div style="text-align:right;min-width:170px">
+          <div class="sub">Total Keuntungan</div>
+          <div id="profitText" class="big" data-value="0">—</div>
+          <div id="profitWords" class="sub">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div class="muted">Hover pada grafik untuk lihat nilai per tahun</div>
+      <div><button id="playPauseAnim" class="btn secondary" type="button">Pause Anim</button></div>
+    </div>
+
+    <div style="position:relative">
+      <canvas id="chart" role="img" aria-label="Grafik pertumbuhan investasi"></canvas>
+      <div id="tooltip" class="tooltip" style="display:none"></div>
+    </div>
+  </aside>
+
+  <!-- INSIDE THE SAME CARD: horizontal rule already simulated by border-top on card-tip,
+       Tip cepat is centered below the two columns but still inside the card border -->
+  <div class="card-tip" aria-hidden="false">
+    <div class="tip-title">Tip cepat</div>
+    <li>Setoran <em>per tahun</em> diinput satu angka — frekuensi mengubah bagaimana angka itu didistribusikan.</li>
+          <li>Setoran di <strong>awal</strong> periode lebih menguntungkan daripada akhir (annuity due).</li>
+          <li>Sesuaikan frekuensi bila investasi memberikan compounding lebih sering (misal bulanan).</li>
+  </div>
+
+</main>
+
+<!-- LEARNING PANEL (SEPARATE, BELOW CARD) -->
+<section class="learning" aria-label="Bahan ajar interaktif">
+  <h2>Bahan Ajar — Video & Interaktif</h2>
+  <div class="content">
+    <div class="lesson-card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong>Pelajaran singkat: Bunga Majemuk</strong>
+          <div class="muted">Video singkat & ringkasan</div>
+        </div>
+        <div class="badge">Interaktif</div>
+      </div>
+      <div style="margin-top:8px">Tonton dua video singkat berikut untuk memahami konsep dasar dan cara membaca grafik.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <iframe width="100%" height="180" src="https://www.youtube.com/embed/7X9Zf3O5u6k" title="YouTube video" frameborder="0" allowfullscreen></iframe>
+        <iframe width="100%" height="180" src="https://www.youtube.com/embed/sZ9nK2P3mKk" title="YouTube video" frameborder="0" allowfullscreen></iframe>
+      </div>
+    </div>
+
+    <div class="lesson-card">
+      <strong>Kuis singkat</strong>
+      <div id="quizArea" style="margin-top:10px"></div>
+    </div>
+  </div>
+</section>
+
+<canvas id="confetti" class="confetti-canvas"></canvas>
+
+<!-- === JavaScript: logic kept (functions IDs unchanged) === -->
+<script>
+    /* -------------------- Utilities -------------------- */
+const fmtCurrency = n => isNaN(n) ? '—' : new Intl.NumberFormat('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+function formatIntegerWithDots(n){ const s=String(n||'').trim(); if(s==='' ) return '—'; const num = parseInt(s.replace(/\D/g,''),10); return isNaN(num)?'—': new Intl.NumberFormat('id-ID').format(num); }
+const _satuan=['','satu','dua','tiga','empat','lima','enam','tujuh','delapan','sembilan','sepuluh','sebelas'];
+function terbilang(n){ n=Math.abs(Math.floor(Number(n)||0)); if(n===0) return 'nol'; function toWords(x){ let s=''; if(x<12) s=_satuan[x]; else if(x<20) s=toWords(x-10)+' belas'; else if(x<100) s=toWords(Math.floor(x/10))+' puluh'+(x%10? ' '+toWords(x%10):''); else if(x<200) s='seratus'+(x-100? ' '+toWords(x-100):''); else if(x<1000) s=toWords(Math.floor(x/100))+' ratus'+(x%100? ' '+toWords(x%100):''); else if(x<2000) s='seribu'+(x-1000? ' '+toWords(x-1000):''); else if(x<1000000) s=toWords(Math.floor(x/1000))+' ribu'+(x%1000? ' '+toWords(x%1000):''); else if(x<1000000000) s=toWords(Math.floor(x/1000000))+' juta'+(x%1000000? ' '+toWords(x%1000000):''); else s=toWords(Math.floor(x/1000000000))+' miliar'; return s } return toWords(n) }
+function terbilangRupiah(n){ return isNaN(n)?'—': terbilang(Math.floor(Number(n)||0)) + ' rupiah' }
+
+/* -------------------- DOM refs -------------------- */
+const principal = document.getElementById('principal');
+const contribution = document.getElementById('contribution');
+const years = document.getElementById('years');
+const rateRange = document.getElementById('rateRange');
+const rateRead = document.getElementById('rateRead');
+const freq = document.getElementById('freq');
+const calculateBtn = document.getElementById('calculateBtn');
+const exportBtn = document.getElementById('exportBtn');
+const exportCsvBtn = document.getElementById('exportCsvBtn');
+const shareBtn = document.getElementById('shareBtn');
+const applyPreset = document.getElementById('applyPreset');
+const presetSelect = document.getElementById('presetSelect');
+const saveScenario = document.getElementById('saveScenario');
+const saveName = document.getElementById('saveName');
+const savedList = document.getElementById('savedList');
+const playPauseAnim = document.getElementById('playPauseAnim');
+
+const previewPrincipal = document.getElementById('previewPrincipal');
+const previewContribution = document.getElementById('previewContribution');
+const previewYears = document.getElementById('previewYears');
+const previewRate = document.getElementById('previewRate');
+
+const totalText = document.getElementById('totalText');
+const totalWords = document.getElementById('totalWords');
+const profitText = document.getElementById('profitText');
+const profitWords = document.getElementById('profitWords');
+
+const themeToggle = document.getElementById('themeToggle');
+const soundToggle = document.getElementById('soundToggle');
+const animateToggle = document.getElementById('animateToggle');
+const tiltToggle = document.getElementById('tiltToggle');
+
+const canvas = document.getElementById('chart');
+const ctx = canvas.getContext('2d');
+const tooltip = document.getElementById('tooltip');
+const confettiCanvas = document.getElementById('confetti');
+
+/* -------------------- canvas resize -------------------- */
+function resizeCanvas(){ const rect = canvas.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1; canvas.width = Math.round(rect.width * dpr); canvas.height = Math.round(rect.height * dpr); ctx.setTransform(dpr,0,0,dpr,0,0); // confetti
+  const r2 = confettiCanvas.getBoundingClientRect(); confettiCanvas.width = window.innerWidth * (window.devicePixelRatio||1); confettiCanvas.height = window.innerHeight * (window.devicePixelRatio||1); confettiCanvas.style.width = window.innerWidth + 'px'; confettiCanvas.style.height = window.innerHeight + 'px'; confettiCtx && confettiCtx.setTransform(window.devicePixelRatio||1,0,0,window.devicePixelRatio||1,0,0);
+}
+window.addEventListener('resize', resizeCanvas);
+let confettiCtx = confettiCanvas.getContext && confettiCanvas.getContext('2d');
+resizeCanvas();
+
+/* -------------------- sanitize inputs (no '.' or ',') -------------------- */
+const blockDotsCommas = el => {
+  el.addEventListener('keydown', e => {
+    const forbidden=['.',',']; if(forbidden.includes(e.key)){ e.preventDefault(); return; }
+    if(e.ctrlKey||e.metaKey) return;
+    if(/^[0-9]$/.test(e.key) || ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Enter'].includes(e.key)) return;
+    if(e.key.length===1) e.preventDefault();
+  });
+  el.addEventListener('paste', ev => {
+    ev.preventDefault();
+    const t=(ev.clipboardData||window.clipboardData).getData('text')||'';
+    const digits = t.replace(/\D+/g,'');
+    const s = el.selectionStart||0, epos = el.selectionEnd||0;
+    el.value = el.value.slice(0,s)+digits+el.value.slice(epos);
+    triggerInput(el);
+  });
+};
+[principal, contribution, years].forEach(blockDotsCommas);
+function triggerInput(el){ el.dispatchEvent(new Event('input', {bubbles:true})); }
+
+/* -------------------- previews -------------------- */
+function updatePreviewPrincipal(){ const v=principal.value.trim(); previewPrincipal.textContent = v ? `${formatIntegerWithDots(v)} (${terbilangRupiah(Number(v))})` : '—' }
+function updatePreviewContribution(){ const v=contribution.value.trim(); previewContribution.textContent = v ? `${formatIntegerWithDots(v)} (${terbilangRupiah(Number(v))})` : '—' }
+function updatePreviewYears(){ const v=years.value.trim(); previewYears.textContent = v ? `${v} tahun` : '—' }
+function updatePreviewRate(){ const val = parseFloat(rateRange.value); rateRead.value = val.toFixed(2) + ' %'; previewRate.textContent = `${val.toFixed(2)}% (${terbilang(val)} persen)` }
+
+principal.addEventListener('input', updatePreviewPrincipal);
+contribution.addEventListener('input', updatePreviewContribution);
+years.addEventListener('input', updatePreviewYears);
+rateRange.addEventListener('input', updatePreviewRate);
+
+/* initial values */
+principal.value='1000000'; contribution.value='100000'; years.value='10'; updatePreviewPrincipal(); updatePreviewContribution(); updatePreviewYears(); updatePreviewRate();
+
+/* -------------------- sound feedback -------------------- */
+let audioCtx=null;
+function clickBeep(){ if(!soundToggle || !soundToggle.checked) return; if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine'; o.frequency.value=620; g.gain.setValueAtTime(0.0001,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.06,audioCtx.currentTime+.01); g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+.2); o.connect(g); g.connect(audioCtx.destination); o.start(); setTimeout(()=>o.stop(),220); }
+
+/* -------------------- ripple effect -------------------- */
+function createRipple(ev, el){ const rect = el.getBoundingClientRect(); const d = Math.max(rect.width, rect.height); const span = document.createElement('span'); span.className = 'ripple'; span.style.width = span.style.height = d + 'px'; const x = (ev.clientX || (rect.left + rect.width/2)) - rect.left - d/2; const y = (ev.clientY || (rect.top + rect.height/2)) - rect.top - d/2; span.style.left = x + 'px'; span.style.top = y + 'px'; el.appendChild(span); requestAnimationFrame(()=> span.style.transform = 'scale(1)'); setTimeout(()=> { span.style.transition = 'opacity .45s ease'; span.style.opacity = '0'; }, 260); setTimeout(()=> { try{ el.removeChild(span) } catch(e){} }, 800); }
+[calculateBtn, exportBtn, exportCsvBtn, shareBtn, applyPreset, saveScenario, playPauseAnim].forEach(btn=>{ btn.addEventListener('click', ev => createRipple(ev, btn)); btn.addEventListener('touchstart', ev => createRipple(ev, btn), {passive:true}); });
+
+/* -------------------- animated count-up (for both total & profit) -------------------- */
+function animateNumberEl(el, from, to, duration=700){ const start = performance.now(); const diff = to - from; function step(t){ const p = Math.min(1, (t - start) / duration); const eased = 1 - Math.pow(1 - p, 3); const val = Math.round(from + diff * eased); el.textContent = 'Rp ' + fmtCurrency(val); if(p < 1) requestAnimationFrame(step); else { el.textContent = 'Rp ' + fmtCurrency(to); el.classList.add('updated'); setTimeout(()=> el.classList.remove('updated'), 800); el.dataset.value = String(Math.round(to)); } } requestAnimationFrame(step); }
+
+/* -------------------- calculation (with frequency & timing) -------------------- */
+function calculateInvestment(P, annualRate, yearsCount, C_perYear, periodsPerYear=12, contributionTiming='end'){
+  const tYears = yearsCount;
+  if(tYears <= 0) return { total: P, profit: 0 };
+  const n = tYears * periodsPerYear; // total periods
+  if(annualRate === 0){ // simple addition, convert C_perYear to per period
+    const Cperiod = C_perYear / periodsPerYear;
+    const total = P + Cperiod * n;
+    return { total, profit: total - (P + Cperiod * n) };
+  }
+  const r = annualRate / periodsPerYear; // rate per period (decimal)
+  const CperiodRaw = C_perYear / periodsPerYear;
+  const ordinary = CperiodRaw * ( (Math.pow(1+r, n) - 1) / r );
+  const adj = (contributionTiming === 'start') ? (ordinary * (1 + r)) : ordinary;
+  const total = P * Math.pow(1 + r, n) + adj;
+  const profit = total - (P + CperiodRaw * n);
+  return { total, profit };
+}
+
+/* -------------------- chart drawing with hover & play/pause -------------------- */
+let lastPoints = [];
+let animating = true;
+playPauseAnim.addEventListener('click', ()=>{ animating = !animating; playPauseAnim.textContent = animating ? 'Pause Anim' : 'Play Anim'; });
+
+function drawChartAnimated(points, animate = true){ resizeCanvas(); const dpr = window.devicePixelRatio || 1; const w = canvas.width / dpr, h = canvas.height / dpr; ctx.clearRect(0,0,w,h); const m = { l:58, r:18, t:24, b:46 }; const innerW = Math.max(10, w - m.l - m.r); const innerH = Math.max(10, h - m.t - m.b); const max = Math.max(...points), min = Math.min(...points); ctx.font = '12px Inter, sans-serif'; ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1; const ticks = 5; for(let i=0;i<=ticks;i++){ const y = m.t + innerH * (i / ticks); ctx.beginPath(); ctx.moveTo(m.l, y); ctx.lineTo(w - m.r, y); ctx.stroke(); const val = max - ((max - min) * (i / ticks)); ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fillText(new Intl.NumberFormat('id-ID',{maximumFractionDigits:0}).format(val), 8, y+4); }
+  const n = points.length; for(let i=0;i<n;i++){ const x = m.l + innerW * (i / (n-1 || 1)); ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fillText(i, x-6, h - 18); }
+  const pts = points.map((p,i)=> { const x = m.l + innerW * (i / (n-1 || 1)); const y = m.t + innerH - ((p - min) / (max - min || 1)) * innerH; return {x,y,v:p,i}; });
+  lastPoints = pts;
+  let progress = 0; const steps = (!animate || !animating) ? 1 : Math.max(30, Math.min(180, n * 6)); function step(){ progress++; ctx.clearRect(0,0,w,h); ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1; for(let i=0;i<=ticks;i++){ const y = m.t + innerH * (i / ticks); ctx.beginPath(); ctx.moveTo(m.l, y); ctx.lineTo(w - m.r, y); ctx.stroke(); const val = max - ((max - min) * (i / ticks)); ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fillText(new Intl.NumberFormat('id-ID',{maximumFractionDigits:0}).format(val), 8, y+4); }
+    for(let i=0;i<n;i++){ const x = m.l + innerW * (i / (n-1 || 1)); ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fillText(i, x-6, h - 18); }
+    const ratio = Math.min(1, progress / steps); const clipWidth = m.l + innerW * ratio; ctx.save(); ctx.beginPath(); ctx.rect(m.l, m.t, clipWidth - m.l + 0.5, innerH); ctx.clip(); ctx.lineWidth = 2.8; ctx.strokeStyle = 'rgba(0,198,255,0.95)'; ctx.beginPath(); for(let i=0;i<pts.length;i++){ if(i===0) ctx.moveTo(pts[i].x, pts[i].y); else ctx.lineTo(pts[i].x, pts[i].y); } ctx.stroke(); ctx.fillStyle = 'rgba(0,198,255,0.06)'; ctx.lineTo(pts[pts.length-1].x, m.t+innerH); ctx.lineTo(pts[0].x, m.t+innerH); ctx.closePath(); ctx.fill(); ctx.restore(); if(progress < steps) requestAnimationFrame(step);
+  }
+  step();
+}
+
+/* -------------------- hover tooltip */
+canvas.addEventListener('mousemove', (ev)=>{
+  const rect = canvas.getBoundingClientRect(); const x = ev.clientX - rect.left; const y = ev.clientY - rect.top; if(!lastPoints || !lastPoints.length) return; let nearest = lastPoints.reduce((a,b)=> Math.abs(b.x - x) < Math.abs(a.x - x) ? b : a, lastPoints[0]); drawChartAnimated(lastPoints.map(p=>p.v), false); ctx.beginPath(); ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.arc(nearest.x, nearest.y, 4, 0, Math.PI*2); ctx.fill(); tooltip.style.left = (rect.left + nearest.x) + 'px'; tooltip.style.top = (rect.top + nearest.y) + 'px'; tooltip.style.display = 'block'; tooltip.textContent = `Tahun ${nearest.i}: Rp ${fmtCurrency(Math.round(nearest.v))}`;
+});
+canvas.addEventListener('mouseleave', ()=>{ tooltip.style.display = 'none'; if(lastPoints && lastPoints.length) drawChartAnimated(lastPoints.map(p=>p.v), false); });
+
+/* -------------------- main handler & safety checks */
+const MAX_YEARS = 500;
+calculateBtn.addEventListener('click', () => {
+  clickBeep();
+  const P = parseInt(String(principal.value).replace(/\D/g,'')) || 0;
+  const C = parseInt(String(contribution.value).replace(/\D/g,'')) || 0;
+  const t = Math.min(MAX_YEARS, parseInt(String(years.value).replace(/\D/g,'')) || 0);
+  const r = parseFloat(rateRange.value) / 100;
+  const periods = parseInt(freq.value,10) || 12;
+  const timing = document.querySelector('input[name="timing"]:checked')?.value || 'end';
+  if(t <= 0){ alert('Masukkan jangka waktu (tahun) minimal 1.'); return; }
+  if(t > MAX_YEARS){ alert('Jangka waktu terlalu besar. Maks ' + MAX_YEARS + ' tahun.'); }
+
+  const prevTotal = Number(totalText.dataset.value || 0);
+  const prevProfit = Number(profitText.dataset.value || 0);
+
+  const { total, profit } = calculateInvestment(P, r, t, C, periods, timing);
+
+  animateNumberEl(totalText, prevTotal, Math.round(total), 900);
+  animateNumberEl(profitText, prevProfit, Math.round(profit), 900);
+
+  totalWords.textContent = '(' + terbilangRupiah(total) + ')';
+  profitWords.textContent = '(' + terbilangRupiah(Math.max(0,profit)) + ')';
+
+  const points = [];
+  for(let year=0; year<=t; year++){
+    if(year === 0){ points.push(P); continue; }
+    const { total: val } = calculateInvestment(P, r, year, C, periods, timing);
+    points.push(val);
+  }
+  drawChartAnimated(points, animateToggle && animateToggle.checked);
+
+  if(profit > P * 1.5){ runConfetti(); }
+
+});
+
+/* -------------------- export PNG & CSV & share */
+exportBtn.addEventListener('click', () => { try { const url = canvas.toDataURL('image/png'); const a = document.createElement('a'); a.href = url; a.download = 'grafik-investasi.png'; document.body.appendChild(a); a.click(); a.remove(); } catch(err) { alert('Gagal ekspor: ' + (err && err.message ? err.message : String(err))); } });
+
+exportCsvBtn.addEventListener('click', ()=>{
+  const P = parseInt(String(principal.value).replace(/\D/g,'')) || 0;
+  const C = parseInt(String(contribution.value).replace(/\D/g,'')) || 0;
+  const t = parseInt(String(years.value).replace(/\D/g,'')) || 0;
+  const r = parseFloat(rateRange.value) / 100;
+  const periods = parseInt(freq.value,10) || 12;
+  const timing = document.querySelector('input[name="timing"]:checked')?.value || 'end';
+  if(t <= 0){ alert('Masukkan jangka waktu (tahun) minimal 1.'); return; }
+  let csv = 'tahun,total\n';
+  for(let y=0;y<=t;y++){ const { total } = calculateInvestment(P, r, y, C, periods, timing); csv += `${y},${Math.round(total)}\n`; }
+  const blob = new Blob([csv], {type: 'text/csv'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'investasi.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+
+shareBtn.addEventListener('click', ()=>{
+  const params = new URLSearchParams(); params.set('p', String(parseInt(String(principal.value).replace(/\D/g,''))||0)); params.set('c', String(parseInt(String(contribution.value).replace(/\D/g,''))||0)); params.set('y', String(parseInt(String(years.value).replace(/\D/g,''))||0)); params.set('r', String(rateRange.value)); params.set('f', String(freq.value)); params.set('t', document.querySelector('input[name="timing"]:checked')?.value||'end'); const url = location.origin + location.pathname + '?' + params.toString(); navigator.clipboard && navigator.clipboard.writeText(url).then(()=> alert('Link dibagikan: link tersalin ke clipboard'), ()=> prompt('Salin link berikut:', url)); });
+
+/* -------------------- presets */
+applyPreset.addEventListener('click', ()=>{
+  const v = presetSelect.value;
+  if(v==='conservative'){ rateRange.value = 2; years.value = 10; principal.value = '2000000'; contribution.value = '200000'; }
+  else if(v==='balanced'){ rateRange.value = 6; years.value = 20; principal.value = '1000000'; contribution.value = '500000'; }
+  else if(v==='aggressive'){ rateRange.value = 10; years.value = 20; principal.value = '500000'; contribution.value = '1000000'; }
+  updatePreviewPrincipal(); updatePreviewContribution(); updatePreviewYears(); updatePreviewRate(); clickBeep(); calculateBtn.click();
+});
+
+/* -------------------- localStorage scenarios */
+const STORAGE_KEY = 'compcalc_scenarios_v1';
+function loadScenarios(){ try{ const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : []; }catch(e){ return []; } }
+function saveScenarios(arr){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }catch(e){ console.warn('save failed', e); } }
+function renderSavedList(){ const arr = loadScenarios(); if(!arr.length){ savedList.innerHTML = '<div class="muted">Belum ada skenario tersimpan.</div>'; return; } savedList.innerHTML = ''; arr.slice().reverse().forEach((s, idx)=>{ const div = document.createElement('div'); div.style.display='flex'; div.style.justifyContent='space-between'; div.style.alignItems='center'; div.style.gap='8px'; div.style.marginTop='6px'; div.innerHTML = `<div style="font-size:0.9rem"><strong>${s.name||'tanpa nama'}</strong><div class="muted">Rp ${fmtCurrency(s.p)} • ${s.r}% • ${s.y} tahun</div></div><div style="display:flex;gap:6px"><button class="btn secondary loadBtn">Muat</button><button class="btn secondary delBtn">Hapus</button></div>`; savedList.appendChild(div); div.querySelector('.loadBtn').addEventListener('click', ()=>{ principal.value = String(s.p); contribution.value = String(s.c); years.value = String(s.y); rateRange.value = String(s.r); freq.value = String(s.f); document.querySelectorAll('input[name="timing"]').forEach(i=> i.value===s.t && (i.checked=true)); updatePreviewPrincipal(); updatePreviewContribution(); updatePreviewYears(); updatePreviewRate(); calculateBtn.click(); }); div.querySelector('.delBtn').addEventListener('click', ()=>{ if(confirm('Hapus skenario ini?')){ const a=loadScenarios(); a.splice(a.length-1-idx,1); saveScenarios(a); renderSavedList(); } }); }); }
+
+saveScenario.addEventListener('click', ()=>{
+  const p = parseInt(String(principal.value).replace(/\D/g,''))||0; const c = parseInt(String(contribution.value).replace(/\D/g,''))||0; const y = parseInt(String(years.value).replace(/\D/g,''))||0; const r = parseFloat(rateRange.value)||0; const f = parseInt(freq.value,10)||12; const t = document.querySelector('input[name="timing"]:checked')?.value||'end'; const name = (saveName.value || '') .trim(); const arr = loadScenarios(); arr.push({ name, p, c, y, r, f, t, created: Date.now() }); saveScenarios(arr); renderSavedList(); saveName.value=''; alert('Skenario tersimpan'); });
+
+renderSavedList();
+
+/* -------------------- header/menu behaviour (robust, accessible) -------------------- */
+(function(){
+  const menuBtn = document.getElementById('menuBtn');
+  const sideMenu = document.getElementById('sideMenu');
+  const menuOverlay = document.getElementById('menuOverlay');
+  const closeMenu = document.getElementById('closeMenu');
+  const collapsibles = Array.from(document.querySelectorAll('.collapsible'));
+  const menuLinks = Array.from(document.querySelectorAll('.menu-list a'));
+
+  if(!menuBtn || !sideMenu) return;
+
+  function setBodyScroll(disable){ try{ if(disable) document.documentElement.style.overflow = 'hidden'; else document.documentElement.style.overflow = ''; }catch(e){}
+  }
+
+  let focusTrapHandler = null;
+  function trapFocus(container){
+    const focusable = Array.from(container.querySelectorAll('a,button,input,select,textarea,[tabindex]:not([tabindex="-1"])'))
+      .filter(n => !n.hasAttribute('disabled') && n.offsetParent !== null);
+    if(!focusable.length) return;
+    const first = focusable[0], last = focusable[focusable.length-1];
+    focusTrapHandler = function(e){
+      if(e.key !== 'Tab') return;
+      if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    };
+    container.addEventListener('keydown', focusTrapHandler);
+  }
+  function releaseTrap(container){ if(focusTrapHandler) container.removeEventListener('keydown', focusTrapHandler); focusTrapHandler = null; }
+
+  function openMenu(){
+    sideMenu.classList.add('open');
+    sideMenu.setAttribute('aria-hidden','false');
+    menuBtn.classList.add('open');
+    menuBtn.setAttribute('aria-expanded','true');
+    if(menuOverlay){ menuOverlay.hidden = false; menuOverlay.classList.add('show'); }
+    setBodyScroll(true);
+    const first = sideMenu.querySelector('a,button'); if(first) first.focus(); trapFocus(sideMenu);
+  }
+
+  function closeMenuFn(){
+    sideMenu.classList.remove('open');
+    sideMenu.setAttribute('aria-hidden','true');
+    menuBtn.classList.remove('open');
+    menuBtn.setAttribute('aria-expanded','false');
+    if(menuOverlay){ menuOverlay.classList.remove('show'); setTimeout(()=>{ if(!menuOverlay.classList.contains('show')) menuOverlay.hidden = true; }, 260); }
+    setBodyScroll(false);
+    releaseTrap(sideMenu);
+    menuBtn.focus();
+  }
+
+  menuBtn.addEventListener('click', (e)=>{ e.preventDefault(); if(sideMenu.classList.contains('open')) closeMenuFn(); else openMenu(); });
+  closeMenu && closeMenu.addEventListener('click', (e)=>{ e.preventDefault(); closeMenuFn(); });
+  menuOverlay && menuOverlay.addEventListener('click', (e)=>{ e.preventDefault(); closeMenuFn(); });
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && sideMenu.classList.contains('open')) closeMenuFn(); });
+
+  collapsibles.forEach(btn => {
+    const next = btn.nextElementSibling;
+    if(next) next.style.display = 'none';
+    btn.setAttribute('role','button');
+    btn.addEventListener('click', ()=>{
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!expanded));
+      if(next){ if(expanded){ next.classList.remove('expanded'); setTimeout(()=> next.style.display = 'none', 320); } else { next.style.display = 'block'; requestAnimationFrame(()=> next.classList.add('expanded')); } }
+    });
+  });
+
+  menuLinks.forEach(a=>{
+    a.addEventListener('click', (ev)=>{
+      menuLinks.forEach(x => x.classList.remove('active'));
+      a.classList.add('active');
+      a.classList.add('press');
+      setTimeout(()=> a.classList.remove('press'), 260);
+      if(window.innerWidth < 900) closeMenuFn();
+    });
+    a.addEventListener('touchstart', ()=> a.classList.add('press'), {passive:true});
+    a.addEventListener('touchend', ()=> a.classList.remove('press'));
+    a.addEventListener('mousedown', ()=> a.classList.add('press'));
+    a.addEventListener('mouseup', ()=> a.classList.remove('press'));
+    a.addEventListener('mouseleave', ()=> a.classList.remove('press'));
+  });
+
+})();
+
+/* -------------------- card tilt (reduced sensitivity + toggle) -------------------- */
+(function(){ const card = document.querySelector('.card'); if(!card) return; let enabled = tiltToggle ? tiltToggle.checked : true; function applyTilt(e){ if(!enabled) return; if(window.innerWidth <= 880) return; const rect = card.getBoundingClientRect(); const cx = rect.left + rect.width/2; const cy = rect.top + rect.height/2; const dx = (e.clientX - cx) / (rect.width/2); const dy = (e.clientY - cy) / (rect.height/2); const limit = 4; const rx = Math.max(-limit, Math.min(limit, -dy * limit)); const ry = Math.max(-limit, Math.min(limit, dx * limit)); card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) translateZ(0)`; } card.addEventListener('mousemove', applyTilt); card.addEventListener('mouseleave', ()=> { card.style.transform = 'none'; }); tiltToggle && tiltToggle.addEventListener('change', ()=> { enabled = tiltToggle.checked; if(!enabled) card.style.transform='none'; }); })();
+
+/* -------------------- confetti (simple & fixed) -------------------- */
+let confettiPieces = [];
+function runConfetti(){
+  if(!confettiCanvas || !confettiCtx) return;
+  confettiPieces = [];
+  const w = confettiCanvas.width;
+  const h = confettiCanvas.height;
+  for(let i=0;i<80;i++){ confettiPieces.push({ x: Math.random()*w, y: Math.random()*h*0.2, vx:(Math.random()-0.5)*6, vy: 2+Math.random()*6, size:2+Math.random()*6, color: 'hsl(' + (Math.random()*360) + ' 80% 60%)', rot:Math.random()*360, vr: (Math.random()-0.5)*10 }); }
+  let t0 = null;
+  function frame(t){ if(!t0) t0=t; const dt = Math.max(0.7, (t - t0)/16); t0 = t; confettiCtx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height); confettiPieces.forEach(p=>{ p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 0.12*dt; p.rot += p.vr*dt; confettiCtx.save(); confettiCtx.translate(p.x, p.y); confettiCtx.rotate(p.rot*Math.PI/180); confettiCtx.fillStyle = p.color; confettiCtx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6); confettiCtx.restore(); }); confettiPieces = confettiPieces.filter(p=> p.y < confettiCanvas.height+50); if(confettiPieces.length) requestAnimationFrame(frame); }
+  requestAnimationFrame(frame);
+}
+
+/* -------------------- save theme preference & URL params parsing -------------------- */
+themeToggle.addEventListener('change', ()=>{ document.body.setAttribute('data-theme', themeToggle.value === 'dark' ? 'dark' : 'light'); localStorage.setItem('compcalc_theme', themeToggle.value); });
+const savedTheme = localStorage.getItem('compcalc_theme'); if(savedTheme) themeToggle.value = savedTheme; document.body.setAttribute('data-theme', themeToggle.value === 'dark' ? 'dark' : 'light');
+
+function applyParamsFromUrl(){ const params = new URLSearchParams(location.search); if(!params.has('p')) return; principal.value = params.get('p')||principal.value; contribution.value = params.get('c')||contribution.value; years.value = params.get('y')||years.value; rateRange.value = params.get('r')||rateRange.value; freq.value = params.get('f')||freq.value; const t = params.get('t'); if(t) document.querySelectorAll('input[name="timing"]').forEach(i=> i.value===t && (i.checked=true)); updatePreviewPrincipal(); updatePreviewContribution(); updatePreviewYears(); updatePreviewRate(); calculateBtn.click(); }
+applyParamsFromUrl();
+
+/* Enter to calculate */
+[principal, contribution, years].forEach(el => el.addEventListener('keydown', e => { if(e.key === 'Enter') calculateBtn.click(); }));
+
+/* init draw */
+calculateBtn.click();
+</script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title> Tentang Kami </title>
+<style>
+  :root{ --bg1: linear-gradient(135deg,#667eea,#764ba2); --glass: rgba(255,255,255,0.10); --accent1: #00c6ff; --accent2: #0072ff; --text: #f5f7fb; --muted: rgba(245,247,251,0.82); }
+  [data-theme="dark"]{ --glass: rgba(0,0,0,0.35); --bg1: linear-gradient(135deg,#071027,#0b1220); --text:#e6eef8; --muted: rgba(230,238,248,0.85); }
+  *{box-sizing:border-box;font-family:Inter,'Poppins',system-ui,-apple-system,sans-serif}
+  html,body{height:100%;margin:0}
+  body{min-height:100vh;display:flex;flex-direction:column;align-items:center;gap:18px;padding:22px;background:var(--bg1);color:var(--text);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+  .site-header{width:100%;max-width:1180px;display:flex;align-items:center;gap:12px;padding:12px 18px;border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow:0 8px 24px rgba(2,6,23,0.18);border:1px solid rgba(255,255,255,0.03);backdrop-filter: blur(6px)}
+  .brand .title{font-weight:800}
+  .brand .sub{font-size:.78rem;color:var(--muted)}
+  .header-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+
+  .menu-btn{
+    background:transparent;
+    border:none;
+    padding:8px;
+    border-radius:10px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    z-index:1300;
+  }
+  .hamburger{ width:28px; height:20px; position:relative; display:inline-block; -webkit-tap-highlight-color: transparent; }
+  .hamburger span{ position:absolute; left:0; right:0; height:2.5px; background:linear-gradient(90deg,var(--accent1),var(--accent2)); border-radius:3px; transition:transform .28s cubic-bezier(.2,.9,.3,1), opacity .18s, top .18s; will-change:transform, opacity, top; }
+  .hamburger span:nth-child(1){ top:0; }
+  .hamburger span:nth-child(2){ top:9px; }
+  .hamburger span:nth-child(3){ top:18px; }
+  .menu-btn.open .hamburger span:nth-child(1){ transform: translateY(9px) rotate(45deg); top:9px; }
+  .menu-btn.open .hamburger span:nth-child(2){ opacity:0; transform: scaleX(0.2); top:9px; }
+  .menu-btn.open .hamburger span:nth-child(3){ transform: translateY(-9px) rotate(-45deg); top:9px; }
+
+  .side-menu{ position:fixed; top:0; left:0; height:100vh; width:360px; max-width:85vw; background:var(--glass); backdrop-filter:blur(12px); box-shadow:0 30px 60px rgba(2,6,23,0.45); transform:translateX(-110%); transition:transform .28s cubic-bezier(.2,.9,.3,1); z-index:1200; padding:22px; overflow:auto; -webkit-overflow-scrolling:touch; }
+  .side-menu.open{ transform:translateX(0); }
+
+  .menu-overlay{ position:fixed; inset:0; background: rgba(0,0,0,0.35); z-index:1100; opacity:0; pointer-events:none; transition:opacity .22s ease; }
+  .menu-overlay.show{ opacity:1; pointer-events:auto; }
+
+  /* Styles untuk Menu Links */
+  .menu-list { list-style: none; padding: 0; margin: 0; }
+  .menu-list li { margin-bottom: 4px; }
+  
+  .menu-list a, .collapsible { 
+    display:flex; 
+    align-items:center; 
+    gap:10px; 
+    padding:12px 16px;
+    border-radius:10px; 
+    text-decoration:none; 
+    color:var(--text); 
+    font-weight:700; 
+    transition:transform .12s ease, background .12s ease, box-shadow .12s ease; 
+    position:relative; 
+    overflow:visible;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+  }
+  
+  .menu-list a:focus, .collapsible:focus { outline:2px solid rgba(0,198,255,0.14); outline-offset:3px; }
+  
+  /* Hover Underline */
+  .menu-list a::after, .collapsible::after{ 
+    content:''; 
+    position:absolute; 
+    left:16px; right:16px; bottom: 8px;
+    height:3px; 
+    border-radius:6px; 
+    background:linear-gradient(90deg,var(--accent1),var(--accent2)); 
+    transform:scaleX(0); 
+    transform-origin:left; 
+    transition:transform .28s cubic-bezier(.2,.9,.3,1), opacity .18s; 
+    opacity:0 
+  }
+  
+  .menu-list a:hover, .collapsible:hover{ transform:translateX(6px); box-shadow:0 8px 20px rgba(0,0,0,0.10); background: rgba(255,255,255,0.03); }
+  .menu-list a:hover::after, .collapsible:hover::after{ transform:scaleX(1); opacity:1 }
+
+  /* Sublist Styles */
+  .sublist { 
+    list-style: none; 
+    padding: 0 0 0 20px;
+    margin: 4px 0;
+  }
+  .sublist li { margin-bottom: 2px; }
+  .sublist a {
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 10px 16px;
+  }
+
+  .close-menu { color:var(--text); background:transparent; border:none; font-size:26px; cursor:pointer; }
+  @media (max-width:420px){ .side-menu{ width:85vw; } .hamburger{ width:24px; height:18px; } }
+
+  /* --- ABOUT SECTION STYLES --- */
+  .card{width:100%;max-width:1180px;border-radius:18px;padding:24px;background:var(--glass);backdrop-filter: blur(10px);box-shadow:0 18px 40px rgba(2,6,23,0.35);position:relative;overflow:hidden; border:1px solid rgba(255,255,255,0.05)}
+  .card::before{ content:'';position:absolute;left:-40px;top:-40px;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle at 20% 20%, rgba(0,198,255,0.15), transparent 40%);pointer-events:none;mix-blend-mode:screen;filter:blur(24px);opacity:.8}
+  
+  .about-content { display:flex; flex-direction:column; gap:32px; position:relative; z-index:2; }
+  .about-header { text-align:left; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:16px; margin-bottom:8px; }
+  
+  /* PERBAIKAN DI SINI: Menambahkan background-clip standar */
+  .about-header h1 { 
+    margin:0; 
+    font-size:1.8rem; 
+    background:linear-gradient(90deg, var(--accent1), #fff); 
+    -webkit-background-clip:text; 
+    background-clip: text; /* Standar properti ditambahkan */
+    -webkit-text-fill-color:transparent; 
+    letter-spacing:-0.5px; 
+  }
+  
+  .grid-layout { display:grid; grid-template-columns: 1fr 1fr; gap:24px; }
+  @media (max-width: 768px) { .grid-layout { grid-template-columns: 1fr; } }
+
+  .text-block { line-height:1.65; font-size:1rem; color:rgba(255,255,255,0.9); font-weight:300; letter-spacing:0.3px; }
+  .highlight { color:var(--accent1); font-weight:600; }
+
+  .feature-box {
+    background: rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 20px;
+    transition: transform 0.3s ease, background 0.3s ease;
+  }
+  .feature-box:hover { transform:translateY(-4px); background:rgba(255,255,255,0.05); border-color:var(--accent1); }
+  .feature-box h3 { margin-top:0; color:var(--accent1); font-size:1.1rem; display:flex; align-items:center; gap:8px; }
+  .feature-box p { margin-bottom:0; font-size:0.92rem; color:var(--muted); }
+
+  .mission-statement {
+    background: linear-gradient(90deg, rgba(0,198,255,0.1), rgba(0,114,255,0.05));
+    border-left: 4px solid var(--accent1);
+    padding: 20px 24px;
+    border-radius: 0 12px 12px 0;
+    font-style: italic;
+    margin-top:12px;
+  }
+
+  .footer-copyright {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    align-items:center;
+  }
+  .footer-copyright span { opacity:0.7; font-family: monospace; letter-spacing: 1px; }
+
+  /* Animations */
+  .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; opacity:0; transform:translateY(20px); }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  @keyframes fadeInUp { to { opacity:1; transform:translateY(0); } }
+
+</style>
+</head>
+<body data-theme="light">
+
+<header class="site-header" role="banner" aria-label="Header">
+  <button id="menuBtn" class="menu-btn" aria-label="Buka menu" aria-controls="sideMenu" aria-expanded="false">
+    <span class="hamburger" aria-hidden="true"><span></span><span></span><span></span></span>
+  </button>
+  <div class="brand" style="margin-left:6px">
+    <div class="title" style="font-size:1.05rem">Tentang Kami</div>
+    <div class="sub"></div>
+  </div>
+  <div class="header-actions" role="toolbar" aria-label="Aksi header">
+    <label for="themeToggle" style="font-size:.78rem;color:var(--muted)">Mode</label>
+    <select id="themeToggle" class="input-read" aria-label="Toggle tema" style="width:120px">
+      <option value="light">Ringan</option><option value="dark">Gelap</option>
+    </select>
+  </div>
+</header>
+
+<nav id="sideMenu" class="side-menu" aria-hidden="true">
+  <button id="closeMenu" class="close-menu" aria-label="Tutup menu" style="position:absolute;right:12px;top:8px;background:transparent;border:none;font-size:26px;color:var(--text)">×</button>
+  <ul class="menu-list" role="menu" aria-label="Menu">
+    <li role="none"><a href="Calculator.html" id="navCalculator" data-nav="calculator" role="menuitem" tabindex="0">Calculator</a></li>
+    <li role="none">
+      <button class="collapsible" aria-expanded="false" style="background:transparent;border:none;padding:0">Pembelajaran</button>
+      <ul class="sublist" aria-label="Kumpulan video YouTube" role="menu">
+        <li><a href="Bunga2.html" class="video-link muted" role="menuitem" tabindex="-1"> Materi compounding</a></li>
+        <li><a href="video.html" class="video-link muted" role="menuitem" tabindex="-1">Pembelajaran Youtube</a></li>
+      </ul>
+    </li>
+    <li role="none"><a href="About.html" id="navAbout" class="active">Tentang & Bantuan</a></li>
+  </ul>
+</nav>
+<div id="menuOverlay" class="menu-overlay" hidden></div>
+
+<main class="card" role="main" aria-label="Halaman Tentang">
+  <div class="about-content">
+    
+    <!-- Header Section -->
+    <div class="about-header fade-in-up">
+      <h1>Visi & Misi</h1>
+      <p style="color:var(--accent1); font-size:0.9rem; margin-top:4px;">Modern. Interaktif. Nyata.</p>
+    </div>
+
+    <!-- Main Text Block 1 -->
+    <div class="text-block fade-in-up delay-1">
+      Website ini dirancang untuk siapa pun yang ingin memahami keuangan dengan cara yang 
+      <span class="highlight">lebih modern</span> dan gak bikin pusing.
+    </div>
+
+    <!-- Feature Grid -->
+    <div class="grid-layout fade-in-up delay-2">
+      <div class="feature-box">
+        <h3>⚡ Real-Time</h3>
+        <p>Bukan cuma teori, kamu juga bisa langsung coba sendiri lewat kalkulator interaktif dan simulasi yang bekerja real-time.</p>
+      </div>
+      <div class="feature-box">
+        <h3>🧠 Paham Konsep</h3>
+        <p>Tujuannya sederhana: biar kamu nggak cuma “hafal rumus”, tapi benar-benar paham apa yang terjadi dengan uangmu saat diinvestasikan.</p>
+      </div>
+    </div>
+
+    <!-- Main Text Block 2 -->
+    <div class="text-block fade-in-up delay-3">
+      Selain itu, setiap bagian di sini dibuat <strong>sesimpel mungkin</strong> supaya kamu bisa belajar dengan ritme yang nyaman.
+      <br><br>
+      <ul style="list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:12px;">
+        <li style="background:rgba(255,255,255,0.1); padding:6px 12px; border-radius:20px; font-size:0.85rem;">✅ Mulai dari konsep dasar</li>
+        <li style="background:rgba(255,255,255,0.1); padding:6px 12px; border-radius:20px; font-size:0.85rem;">✅ Uji hitungan sendiri</li>
+        <li style="background:rgba(255,255,255,0.1); padding:6px 12px; border-radius:20px; font-size:0.85rem;">✅ Belajar sambil nonton</li>
+      </ul>
+      <p style="margin-top:16px;">Dengan cara ini, kamu bisa memahami investasi dari sudut pandang yang lebih nyata, bukan hanya teori di atas kertas.</p>
+    </div>
+
+    <!-- Closing / Mission -->
+    <div class="mission-statement fade-in-up delay-3">
+      "Pada akhirnya, semoga website ini bisa bantu kamu — baik pemula maupun yang sudah sering dengar istilah finansial — untuk belajar dengan lebih percaya diri dan mengambil keputusan yang lebih bijak. <strong>Pelan-pelan, yang penting konsisten.</strong>"
+    </div>
+
+    <!-- Creative Copyright -->
+    <div class="footer-copyright fade-in-up delay-3">
+      <div>&copy; 2025 Financial Freedom Project</div>
+      <span>Dibuat dengan ❤️ dan Kopi. Hak Cipta Dilindungi.</span>
+    </div>
+
+  </div>
+</main>
+
+<script>
+(function(){
+  // Header/menu behaviour
+  const menuBtn = document.getElementById('menuBtn');
+  const sideMenu = document.getElementById('sideMenu');
+  const menuOverlay = document.getElementById('menuOverlay');
+  const closeMenu = document.getElementById('closeMenu');
+  const collapsibles = Array.from(document.querySelectorAll('.collapsible'));
+  const menuLinks = Array.from(document.querySelectorAll('.menu-list a'));
+
+  function setBodyScroll(disable){ try{ if(disable) document.documentElement.style.overflow = 'hidden'; else document.documentElement.style.overflow = ''; }catch(e){} }
+
+  let focusTrapHandler = null;
+  function trapFocus(container){
+    const focusable = Array.from(container.querySelectorAll('a,button,input,select,textarea,[tabindex]:not([tabindex="-1"])'))
+      .filter(n => !n.hasAttribute('disabled') && n.offsetParent !== null);
+    if(!focusable.length) return;
+    const first = focusable[0], last = focusable[focusable.length-1];
+    focusTrapHandler = function(e){
+      if(e.key !== 'Tab') return;
+      if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    };
+    container.addEventListener('keydown', focusTrapHandler);
+  }
+  function releaseTrap(container){ if(focusTrapHandler) container.removeEventListener('keydown', focusTrapHandler); focusTrapHandler = null; }
+
+  function openMenu(){
+    sideMenu.classList.add('open');
+    sideMenu.setAttribute('aria-hidden','false');
+    menuBtn.classList.add('open');
+    menuBtn.setAttribute('aria-expanded','true');
+    if(menuOverlay){ menuOverlay.hidden = false; menuOverlay.classList.add('show'); }
+    setBodyScroll(true);
+    const first = sideMenu.querySelector('a,button'); if(first) first.focus(); trapFocus(sideMenu);
+  }
+
+  function closeMenuFn(){
+    sideMenu.classList.remove('open');
+    sideMenu.setAttribute('aria-hidden','true');
+    menuBtn.classList.remove('open');
+    menuBtn.setAttribute('aria-expanded','false');
+    if(menuOverlay){ menuOverlay.classList.remove('show'); setTimeout(()=>{ if(!menuOverlay.classList.contains('show')) menuOverlay.hidden = true; }, 260); }
+    setBodyScroll(false);
+    releaseTrap(sideMenu);
+    menuBtn.focus();
+  }
+
+  if(menuBtn && sideMenu){
+    menuBtn.addEventListener('click', (e)=>{ e.preventDefault(); if(sideMenu.classList.contains('open')) closeMenuFn(); else openMenu(); });
+  }
+
+  closeMenu && closeMenu.addEventListener('click', (e)=>{ e.preventDefault(); closeMenuFn(); });
+  menuOverlay && menuOverlay.addEventListener('click', (e)=>{ e.preventDefault(); closeMenuFn(); });
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && sideMenu.classList.contains('open')) closeMenuFn(); });
+
+  collapsibles.forEach(btn => {
+    const next = btn.nextElementSibling;
+    if(next) next.style.display = 'none';
+    btn.setAttribute('role','button');
+    btn.addEventListener('click', ()=> {
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!expanded));
+      if(next){ if(expanded){ next.classList.remove('expanded'); setTimeout(()=> next.style.display = 'none', 320); } else { next.style.display = 'block'; requestAnimationFrame(()=> next.classList.add('expanded')); } }
+    });
+  });
+
+  // theme toggle persistence
+  const themeToggle = document.getElementById('themeToggle');
+  if(themeToggle){
+    themeToggle.addEventListener('change', ()=>{ document.body.setAttribute('data-theme', themeToggle.value === 'dark' ? 'dark' : 'light'); localStorage.setItem('compcalc_theme', themeToggle.value); });
+    const savedTheme = localStorage.getItem('compcalc_theme'); if(savedTheme) themeToggle.value = savedTheme;
+    document.body.setAttribute('data-theme', themeToggle && themeToggle.value === 'dark' ? 'dark' : 'light');
+  }
+
+})();
+</script>
+</body>
+</html>
